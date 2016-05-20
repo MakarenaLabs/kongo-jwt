@@ -12,10 +12,12 @@ import (
 	"github.com/spf13/viper"
 )
 
+// TokenAuthentication contains the token released
 type TokenAuthentication struct {
 	Token string `json:"token" form:"token"`
 }
 
+// HandleAuthEndpoint retrive the autheticated Kong user with KongID, Username, ID (custom ID)
 func HandleAuthEndpoint(w http.ResponseWriter, r *http.Request) {
 	// Retrive auth user (if any)
 	user := context.Get(r, "auth")
@@ -24,7 +26,7 @@ func HandleAuthEndpoint(w http.ResponseWriter, r *http.Request) {
 
 // HandleLogin releases the token
 func HandleLogin(w http.ResponseWriter, r *http.Request) {
-	// Authenticate your users before call GetToken method
+	// Authenticate your users before call GetToken method with the username and the custom ID
 	token, err := kong.GetToken("test", "123")
 	if err != nil {
 		respond.With(w, r, http.StatusInternalServerError, err.Error())
@@ -47,6 +49,7 @@ func main() {
 	router.HandleFunc("/endpoint_auth", HandleAuthEndpoint).Methods("GET")
 	router.HandleFunc("/login", HandleLogin).Methods("POST")
 
+	// Add the auth middleware to retrive the autheticated user at kong gateway
 	n := negroni.New(kong.AuthMiddleware())
 	n.UseHandler(router)
 
